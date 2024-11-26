@@ -7,6 +7,10 @@ import random
 import more_itertools
 import numpy as np
 import torch
+
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
+
 from collections import defaultdict, deque
 from torch.utils.data import Dataset
 from tqdm import tqdm

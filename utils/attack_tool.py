@@ -4,12 +4,12 @@ import json
 import random
 import numpy as np
 import torch
-import GPUtil
+#import GPUtil
 from utils.eval_tools import train_question
 from utils.eval_datasets import  CroPADataset
 from huggingface_hub import login
 
-CONFIG_PATH = "data/config.json"
+CONFIG_PATH = "/var/lib/kubelet/jw/projects/CroPA_jw/data/config.json"
 
 # %%
 def seed_everything(seed: int):
@@ -20,12 +20,33 @@ def seed_everything(seed: int):
     torch.cuda.manual_seed(seed)
 
 def get_available_gpus(min_memory_available):
-    """Returns a list of IDs for GPUs with more than min_memory_available MB of memory."""
-    GPUs = GPUtil.getGPUs()
-    available_gpus = [gpu.id for gpu in GPUs if gpu.memoryFree > min_memory_available]
-    assert len(available_gpus) > 0, "No GPUs available"
-    print(f"Using GPUs: {available_gpus[0]} available {available_gpus}")
-    return available_gpus
+    # """Returns a list of IDs for GPUs with more than min_memory_available MB of memory."""
+    # GPUs = GPUtil.getGPUs()
+    # available_gpus = [gpu.id for gpu in GPUs if gpu.memoryFree > min_memory_available]
+    # assert len(available_gpus) > 0, "No GPUs available"
+    # print(f"Using GPUs: {available_gpus[0]} available {available_gpus}")
+    # return available_gpus
+    """Returns a list of NPU IDs with more than min_memory_available MB of memory."""
+    # 获取NPU设备的数量
+    npu_count = torch.npu.device_count()
+    if npu_count == 0:
+        raise RuntimeError("No NPU devices found.")
+    available_npus = []
+    for npu_id in range(npu_count):
+        # 获取每个NPU设备的显存情况
+        try:
+            memory_total = torch.npu.memory_reserved(npu_id)
+            memory_free = torch.npu.memory_free(npu_id)
+            memory_free_mb = memory_free / 1024 / 1024  # 转换为MB
+            if memory_free_mb > min_memory_available:
+                available_npus.append(npu_id)
+        except Exception as e:
+            print(f"Error checking memory for NPU {npu_id}: {e}")
+    # 判断是否有可用的NPU
+    if len(available_npus) == 0:
+        raise RuntimeError(f"No NPUs with more than {min_memory_available}MB of free memory available.")
+    print(f"Using NPUs: {available_npus[0]} available {available_npus}")
+    return available_npus
 
 def add_extra_args(args, model_name, config_path = CONFIG_PATH):
     with open(config_path, 'r') as f:
