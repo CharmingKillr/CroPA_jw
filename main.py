@@ -85,7 +85,7 @@ def attack(
     image_set = set()
     
     vqa_specific_instruction = load_img_specific_questions() 
-    with open("data/clean_train_vqa_map.json") as f:
+    with open("/var/lib/kubelet/jw/projects/CroPA_jw/data/clean_train_vqa_map.json") as f:
         clean_vqa_model_output = json.load(f)
     
     tpoch = tqdm(test_dataset)
@@ -422,7 +422,7 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(allow_abbrev=False)
     parser.add_argument("--prompt_num", type=int, default=10,
                         help="The number of prompts utilized during the optimization phase")
-    parser.add_argument("--device", type=int, default=-1,
+    parser.add_argument("--device", type=int, default=2,
                         help="The device id of the GPU to use")
     parser.add_argument("--iter_num", type=int, default=300,
                         help="The num of attack iterations")
@@ -439,9 +439,10 @@ if __name__=="__main__":
     
     config_args = parser.parse_known_args()[0]
     assert config_args.method in ["cropa","baseline"], "method not supported"
+    # 
     add_extra_args(config_args, config_args.model_name)
-    
-    module = importlib.import_module(f"models.{config_args.model_name}")
+    # 动态导入models包内的模型
+    module = importlib.import_module(f"models.{config_args.model_name}") 
     if config_args.device >= 0:
         print("use specified gpu",config_args.device)
     else:

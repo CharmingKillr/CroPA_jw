@@ -71,8 +71,8 @@ def add_extra_args(args, model_name, config_path = CONFIG_PATH):
     args.vqav2_train_questions_json_path = f"{VQA_ROOT}/v2_OpenEnded_mscoco_train2014_questions.json"
     args.vqav2_eval_annotations_json_path = f"{VQA_ROOT}/v2_mscoco_val2014_annotations.json"
     
-    args.test_annotations_json_path = "data/filtered_v2_mscoco_val2014_annotations.json"
-    args.test_questions_json_path = "data/filtered_v2_OpenEnded_mscoco_val2014_questions.json"
+    args.test_annotations_json_path = "/var/lib/kubelet/jw/projects/CroPA_jw/data/filtered_v2_mscoco_val2014_annotations.json"
+    args.test_questions_json_path = "/var/lib/kubelet/jw/projects/CroPA_jw/data/filtered_v2_OpenEnded_mscoco_val2014_questions.json"
     args.eval_batch_size = config["eval_batch_size"]
 
 def compute_effective_num_shots(num_shots, model_type):
@@ -225,7 +225,8 @@ def load_datasets(args, load_mode = "both", dataset_name = "vqav2"):
     return train_dataset, test_dataset
 
 def load_instructblip_model(device,module):
-    INSTRUCT_BLIP_PATH = "Salesforce/instructblip-vicuna-7b"    
+    #INSTRUCT_BLIP_PATH = "Salesforce/instructblip-vicuna-7b"
+    INSTRUCT_BLIP_PATH = '/var/lib/kubelet/jw/huggingfacemodel/instructblip-vicuna-7b'
     model_args = {
         'lm_path': INSTRUCT_BLIP_PATH,         
         'processor_path': INSTRUCT_BLIP_PATH,
@@ -235,9 +236,12 @@ def load_instructblip_model(device,module):
     return eval_model
 
 def load_blip_model(device,module):
+    BLIP2_PATH = '/var/lib/kubelet/jw/huggingfacemodel/blip2-opt-2.7b'
     model_args = {
-        'lm_path': 'Salesforce/blip2-opt-2.7b',         
-        'processor_path': 'Salesforce/blip2-opt-2.7b',
+        #'lm_path': 'Salesforce/blip2-opt-2.7b',         
+        #'processor_path': 'Salesforce/blip2-opt-2.7b',
+        'lm_path' : BLIP2_PATH,
+        'processor_path' : BLIP2_PATH,
         'device': f'{device}', 
     }
     eval_model = module.EvalModel(model_args)
@@ -246,10 +250,13 @@ def load_blip_model(device,module):
 def load_flamingo_model(device,module):
     with open(CONFIG_PATH, 'r') as f:
         config = json.load(f)
-        
+    FLAMINGO_PATH = '/var/lib/kubelet/jw/huggingfacemodel/llama-7b-hf'
+    # LOCAL_VISION_ENCODER_PATH = '/var/lib/kubelet/jw/dataset/weights/clip/ViT-L-14.pt'
     model_args = {
-        'lm_path': 'luodian/llama-7b-hf', 
-        'lm_tokenizer_path': 'luodian/llama-7b-hf',
+        #'lm_path': 'luodian/llama-7b-hf', 
+        #'lm_tokenizer_path': 'luodian/llama-7b-hf',
+        'lm_path': FLAMINGO_PATH,
+        'lm_tokenizer_path': FLAMINGO_PATH,
         'vision_encoder_path': 'ViT-L-14',
         'vision_encoder_pretrained': 'openai', 
         'checkpoint_path': config['flamingo_checkpoint_path'], 
@@ -264,7 +271,7 @@ def load_model(device,module,model_name):
     
     with open(CONFIG_PATH, 'r') as f:
         config = json.load(f)
-    login(token = config["hf_login_token"])
+    #login(token = config["hf_login_token"])
     print("model_name is:",model_name)
     
     if model_name=="blip2":

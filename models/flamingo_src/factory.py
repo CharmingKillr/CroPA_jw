@@ -54,6 +54,7 @@ def create_model_and_transforms(
     lang_encoder = AutoModelForCausalLM.from_pretrained(
         lang_encoder_path, local_files_only=use_local_files
     )
+    # 假设FlamingoLMMixin包含了一个多模态的图像处理功能，extend_instance会将这个功能注入到lang_encoder模型中。这样，lang_encoder不仅仅是一个普通的语言模型，还可以处理图像输入，进行图文联合任务（例如图像描述生成、视觉问答等）。
     extend_instance(lang_encoder, FlamingoLMMixin)
 
     if decoder_layers_attr_name is None:

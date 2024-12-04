@@ -782,7 +782,7 @@ def load_icl_example(train_dataset,effective_num_shots = 2):
     print("train_indices is:",train_indices,"test_indices is:",test_indices)
     """
        
-    with open('data/icl_indices.json', 'r') as f:
+    with open('/var/lib/kubelet/jw/projects/CroPA_jw/data/icl_indices.json', 'r') as f:
         indices_map = json.load(f)
     train_indices = indices_map[str(effective_num_shots)]["train"]
     test_indices = indices_map[str(effective_num_shots)]["test"]        

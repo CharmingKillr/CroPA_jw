@@ -1,6 +1,6 @@
 {
-    "hf_login_token": "<YOUR HF TOKEN>",
-    "data_root": "<YOUR data_root>",
-    "flamingo_checkpoint_path": "<YOUR PATH TO checkpoint.pt>",
+    "hf_login_token": "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",
+    "data_root": "/var/lib/kubelet/jw/dataset",
+    "flamingo_checkpoint_path": "/var/lib/kubelet/jw/dataset/weights/OpenFlamingo-9B-vitl-mpt7b_checkpoint.pt",
     "eval_batch_size": 10
 }

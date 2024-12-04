@@ -43,16 +43,18 @@ class PerceiverAttention(nn.Module):
                 shape (b, T, n1, D)
             latent (torch.Tensor): latent features
                 shape (b, T, n2, D)
+            
+            n = n1 + n2
         """
         x = self.norm_media(x)
         latents = self.norm_latents(latents)
 
         h = self.heads
 
-        q = self.to_q(latents)
-        kv_input = torch.cat((x, latents), dim=-2)
-        k, v = self.to_kv(kv_input).chunk(2, dim=-1)
-        q, k, v = rearrange_many((q, k, v), "b t n (h d) -> b h t n d", h=h)
+        q = self.to_q(latents) # (b, T, n, inner_dim)
+        kv_input = torch.cat((x, latents), dim=-2)  #  (b, T, n1+n2, D)
+        k, v = self.to_kv(kv_input).chunk(2, dim=-1) # k,v (b, T, n1+n2, inner_dim)
+        q, k, v = rearrange_many((q, k, v), "b t n (h d) -> b h t n d", h=h) # q (b, h, T, n, d) k,v (b, h, T, n1+n2, d)
         q = q * self.scale
 
         # attention
