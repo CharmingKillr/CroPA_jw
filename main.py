@@ -461,8 +461,7 @@ if __name__=="__main__":
         
     target_text = "unknown"
     iter_num = 1701
-    
-    attack(
+        attack(
         config_args,
         eval_model = eval_model,
         max_generation_length = 5,

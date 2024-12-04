@@ -1,5 +1,5 @@
 {
-    "hf_login_token": "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",
+    "hf_login_token": "<hf-token>",
     "data_root": "/var/lib/kubelet/jw/dataset",
     "flamingo_checkpoint_path": "/var/lib/kubelet/jw/dataset/weights/OpenFlamingo-9B-vitl-mpt7b_checkpoint.pt",
     "eval_batch_size": 10
