@@ -60,7 +60,7 @@ def attack(
 
     train_dataset, test_dataset = datasets if datasets is not None else load_datasets(args = args)
     train_batch_demo_samples,test_batch_demo_samples = load_icl_example(train_dataset)
-    test_dataset = get_subset(dataset = test_dataset, frac=fraction)
+    test_dataset = get_subset(dataset = test_dataset, frac=fraction) # test_dataset is a subset 
             
     # Create a unique directory based on current running id to avoid overwriting
     output_dir = f"frac_{fraction}"
@@ -71,7 +71,7 @@ def attack(
     with open(args.vqav2_eval_annotations_json_path, "r") as f:
         eval_file =  json.load(f)
     annos = eval_file["annotations"]
-    ques_id_to_img_id = {i["question_id"]:i["image_id"] for i in annos}    
+    ques_id_to_img_id = {i["question_id"]:i["image_id"] for i in annos}    # 存储对应 question_id 和 image_id 的 dict
     
     assert prompt_num >= 0, "require at least one question"
     img_id_to_train_prompt = get_img_id_train_prompt_map(prompt_num)
@@ -196,7 +196,7 @@ def attack(
         access_order = deque(access_order) 
         index_count = 0
         t_ids = []
-        for ep in range(iters):
+        for ep in range(iters):       ##################### CroPa 开始添加扰动
             # get the text index to update
             if index_count != 0 and index_count % prompt_num == 0:
                 rotation_offset = random.randint(0, prompt_num - 1)
@@ -210,7 +210,7 @@ def attack(
             context_token_len = context_token_len_list[text_idx]
             input_x = input_x_original.clone().detach()
             if model_name=="open_flamingo":
-                input_x[0,-1] = input_x[0,-1] + noise
+                input_x[0,-1] = input_x[0,-1] + noise       ######## 初始化 image perturbation
             elif model_name in ["instructblip","blip2"]:
                 # print(input_x.shape) #[1,3,224,224]
                 input_x = input_x + noise
@@ -218,12 +218,12 @@ def attack(
             input_ids = input_ids_list[text_idx]
             attention_mask = attention_mask_list[text_idx]
             
-            inputs_embeds_original = lm_emb(input_ids).clone().detach()
-            text_perturb = torch.tensor(perturb_list[text_idx],requires_grad=True,device=device)
+            inputs_embeds_original = lm_emb(input_ids).clone().detach()  # 常量
+            text_perturb = torch.tensor(perturb_list[text_idx],requires_grad=True,device=device) 
             # print(text_perturb.requires_grad) 
             # text_perturb = text_perturb.to(device)
             
-            inputs_embeds = inputs_embeds_original + text_perturb
+            inputs_embeds = inputs_embeds_original + text_perturb    ######### 初始化 text_perturbation   loss对text_perturb的grad = loss对inputs_embeds的grad 因为inputs_embeds_original是常量
             if method == "baseline":
                 inputs_embeds = None
             
@@ -259,29 +259,29 @@ def attack(
             # total_loss.append(float(loss.item()))
             loss.backward()
             loss_json[img_id].append(float(loss.item()))
-            tpoch.set_postfix(loss=loss.item(),best_loss=best_loss.item(),ep = ep,t_id=t_ids)
+            tpoch.set_postfix(loss=loss.item(),best_loss=best_loss.item(),ep = ep,t_id=t_ids)   # 实时在进度条右侧显示
             
             
             if not target.startswith("no target"):
                 if loss<best_loss:
-                    best_loss = loss
-                    best_attack = noise.clone().detach()
+                    best_loss = loss    # 更新best_loss
+                    best_attack = noise.clone().detach() # 更新best_attack    
             else:
                 if loss>best_loss:
                     best_loss = loss
                     best_attack = noise.clone().detach()
             
-            grad = noise.grad.detach()
+            grad = noise.grad.detach()   # image_perturb 对 loss 的 梯度
             if method!="baseline":
-                text_grad = text_perturb.grad.detach()
-                mask = torch.ones_like(inputs_embeds)
-                mask[:,:context_token_len] = 0
-                mask[:,-target_token_len_list[text_idx]:] = 0
+                text_grad = text_perturb.grad.detach()  # text_perturb 对 loss 的梯度
+                mask = torch.ones_like(inputs_embeds)  # [b, seq_len, 4096]
+                mask[:,:context_token_len] = 0   # 把不需要隐藏的变为0
+                mask[:,-target_token_len_list[text_idx]:] = 0 # target_len_list[text_idx] = 2
             # update the noise
             if not target.startswith("no target"):
-                d = torch.clamp(noise - alpha1 * torch.sign(grad), min=-epsilon, max=epsilon)                
+                d = torch.clamp(noise - alpha1 * torch.sign(grad), min=-epsilon, max=epsilon)     #  alpha1 = 1/255  epsilon = 16/255   更新图像扰动并裁剪以防超出界限  
                 if method=="cropa" and ep in cropa_iter:
-                    text_perturb.data = torch.clamp(text_perturb+ mask*torch.sign(text_grad)*alpha2,min = -0.23,max = 0.27)                    
+                    text_perturb.data = torch.clamp(text_perturb+ mask*torch.sign(text_grad)*alpha2,min = -0.23,max = 0.27)    # alpha2 = 0.01  在指定轮次更新文本扰动并裁剪            
                     print("update text perturb at iter:",ep,"id:",text_idx)
                         
             else: 
@@ -301,9 +301,9 @@ def attack(
                 os.makedirs(f"{output_dir}/{ep}",exist_ok=True)
                 np.save(f"{output_dir}/{ep}/{ques_id_to_img_id[item['question_id']]}_.npy",best_attack.clone().cpu().numpy()) 
                 attack  = best_attack     
-                vqa_sample = vqa_agnostic_instruction()
-                vqa_specific_sample = vqa_specific_instruction[img_id]
-                prompt_list = [vqa_sample,vqa_specific_sample[:10],cls_instruction(),cap_instruction()]
+                vqa_sample = vqa_agnostic_instruction()  # 包含十个问题
+                vqa_specific_sample = vqa_specific_instruction[img_id]  # 根据每张图像有15个问题
+                prompt_list = [vqa_sample,vqa_specific_sample[:10],cls_instruction(),cap_instruction()] # cls_instruction是gpt生成的20条图像分类prompt  cap_instruction是关于20条图像字幕的prompt
                 vqa_stats  = {"number":{"success":0,"total":0},
                             "yes_no":{"success":0,"total":0},
                             "what":{"success":0,"total":0},
@@ -343,15 +343,15 @@ def attack(
                                                 batch_text=eval_text,max_generation_length=max_generation_length,
                                                 num_beams=num_beams,length_penalty=length_penalty)
 
-                        process_function = postprocess_generation
-                        new_predictions = list(map(process_function, outputs))
+                        process_function = postprocess_generation  
+                        new_predictions = list(map(process_function, outputs))  # 加了图像扰动得到的预测
                         clean_newpredictions = list(map(process_function, clean_outputs)) if not args.quick_eval else None
                         for i in range(len(new_predictions)):
                             target_attack_is_success = False
                             if clean_newpredictions is not None and new_predictions[i]!=clean_newpredictions[i]:
                                 success_count+=1    
                                 
-                            if new_predictions[i].strip().lower() ==target.lower().split("<")[0].strip():
+                            if new_predictions[i].strip().lower() ==target.lower().split("<")[0].strip(): 
                                 target_success_count+=1 
                                 target_attack_is_success = True
                             
@@ -436,6 +436,8 @@ if __name__=="__main__":
                         help="The num of in context learning examples to use, specific for Flamingo")
     parser.add_argument("--method", type=str, default="cropa",
                         help="The mehod of attack, either cropa or baseline")
+    parser.add_argument("--pwd", type=str, default='/var/lib/kubelet/jw/projects/CroPA_jw',
+                        help='the path to the project on 910bl')
     
     config_args = parser.parse_known_args()[0]
     assert config_args.method in ["cropa","baseline"], "method not supported"
@@ -447,7 +449,10 @@ if __name__=="__main__":
         print("use specified gpu",config_args.device)
     else:
         config_args.device= get_available_gpus(45000)[0]
-    device= f"cuda:{ config_args.device}"
+
+    device= f"cuda:{config_args.device}"
+    torch_npu.npu.set_device(config_args.device)
+
     eval_model = load_model(config_args.device,module,config_args.model_name)
     train_dataset, test_dataset = load_datasets(config_args)
     num_shots = config_args.shot
@@ -461,7 +466,7 @@ if __name__=="__main__":
         
     target_text = "unknown"
     iter_num = 1701
-        attack(
+    attack(
         config_args,
         eval_model = eval_model,
         max_generation_length = 5,
@@ -473,7 +478,7 @@ if __name__=="__main__":
         fraction=config_args.fraction,
         iters = iter_num,
         target = target_text+config_args.eoc,
-        base_dir = f"output/{config_args.model_name}_shots_{num_shots}/{config_args.method}/num_{prompt_num}_{target_text}",
+        base_dir = f"{config_args.pwd}/output/{config_args.model_name}_shots_{num_shots}/{config_args.method}/num_{prompt_num}_{target_text}",
         alpha2 = alpha2 ,
         prompt_num=config_args.prompt_num,
         datasets=(train_dataset,  test_dataset),

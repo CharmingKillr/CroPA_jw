@@ -99,7 +99,7 @@ def cls_instruction():
     Generate Prompts: Suppose you need to write prompt to let vision-language model to do the image classification task, can you write some prompt. Please write 20 in python code block. Please do not assume the content of the image, write generic ones. Your prompts should be varied.
     """   
     instructions = [
-        "Imagine you're explaining this image to someone over the phone. Please describe the image in one word?"
+        "Imagine you're explaining this image to someone over the phone. Please describe the image in one word?",
         "Perform the image classification task on this image. Give the label in one word.",
         "Imagine a child is trying to identify the image. What might they excitedly point to and name?",        
         "If this image were turned into a jigsaw puzzle, what would the box label say to describe the picture inside?",
@@ -290,7 +290,7 @@ def vqa_agnostic_instruction():
 
 
 def load_img_specific_questions(): 
-    with open("data/img_specific_questions.json","r") as f:
+    with open("/var/lib/kubelet/jw/projects/CroPA_jw/data/img_specific_questions.json","r") as f:
         specific_questions = json.load(f)
     return specific_questions
 

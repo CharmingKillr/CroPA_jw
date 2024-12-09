@@ -192,12 +192,12 @@ class EvalModel(BaseEvalModel):
         )
         input_ids = encodings["input_ids"]
         attention_mask = encodings["attention_mask"]
-        attack = attack.to(self.device)
-        input_x = self._prepare_images_no_normalize(batch_images).to(self.device)
+        attack = attack.to(self.device)  # 1,1,3,224,224
+        input_x = self._prepare_images_no_normalize(batch_images).to(self.device) # 10,1,1,3,224,224
         # print("input_x",input_x.shape)
         # print("attack",attack.shape)
         # input_x[0,-1] = input_x[0,-1] + attack
-        input_x[:, -1, :, :, :, :] += attack        
+        input_x[:, -1, :, :, :, :] += attack        # 对输入的10个x 添加扰动
         if augmentation is not None:
             input_x = self._aug_images(input_x,augmentation)
             input_x = input_x.to(self.device)
@@ -215,7 +215,7 @@ class EvalModel(BaseEvalModel):
                 
             )
         
-        outputs = outputs[:, len(input_ids[0]) :]
+        outputs = outputs[:, len(input_ids[0]) :]  # 只保留预测的token_ids
         
         # print("raw outputs",outputs)
         return self.tokenizer.batch_decode(outputs, skip_special_tokens=True)

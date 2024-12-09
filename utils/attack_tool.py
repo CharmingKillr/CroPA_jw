@@ -128,12 +128,12 @@ def get_unique_test_image_ids():
     return total_id
 
 def get_unique_test_image_ids_over_15():
-    total_id = np.load("data/multi_ques_15.npy")
+    total_id = np.load("/var/lib/kubelet/jw/projects/CroPA_jw/data/multi_ques_15.npy")
     return list(total_id)
 
 def create_id_question_map(image_ids: list[str], num: int, question_pool: list,path =None):
     
-    query_path = f"data/question_list/num_{num}"
+    query_path = f"/var/lib/kubelet/jw/projects/CroPA_jw/data/question_list/num_{num}"
     
     # use speicified path if provided
     if path!=None:
@@ -157,13 +157,13 @@ def create_id_question_map(image_ids: list[str], num: int, question_pool: list,p
 
 def get_img_id_train_ques_map(num):
     
-    query_path = f"data/question_list/num_{num}"
+    query_path = f"/var/lib/kubelet/jw/projects/CroPA_jw/data/question_list/num_{num}"
     with open(f'{query_path}/id_to_question.json', 'r') as f:
         id_ques_map = json.load(f)
     return id_ques_map
 
 def get_img_id_train_prompt_map(num):
-    query_path = f"data/prompt_list/num_{num}"
+    query_path = f"/var/lib/kubelet/jw/projects/CroPA_jw/data/prompt_list/num_{num}"
     with open(f'{query_path}/id_to_question.json', 'r') as f:
         id_ques_map = json.load(f)
     return id_ques_map
@@ -172,7 +172,7 @@ def get_ques(ids_ques_map,id,num,question_pool):
     if num == 0:
         return []
     
-    file_path = f"data/question_list/num_{num}"
+    file_path = f"/var/lib/kubelet/jw/projects/CroPA_jw/data/question_list/num_{num}"
     single_id_ques_path = f"{file_path}/{id}.json"
     if id not in ids_ques_map:
         if os.path.exists(single_id_ques_path):
@@ -191,7 +191,7 @@ def get_ques(ids_ques_map,id,num,question_pool):
 def create_num_train_ques_over_15(num = None):
         total_id = get_unique_test_image_ids_over_15()
         ques_pool = train_question()        
-        create_id_question_map(total_id, num, ques_pool, path = f"data/question_list_over_15/num_{num}")
+        create_id_question_map(total_id, num, ques_pool, path = f"/var/lib/kubelet/jw/projects/CroPA_jw/data/question_list_over_15/num_{num}")
     
 def load_datasets(args, load_mode = "both", dataset_name = "vqav2"):
     if dataset_name == "vqav2":
