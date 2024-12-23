@@ -1,0 +1,6 @@
+    vqa,vqa_sp,cls,cap
+900,1.0000,0.0000,0.0000,0.0000
+1100,nan,nan,nan,nan
+1300,nan,nan,nan,nan
+1500,nan,nan,nan,nan
+1700,nan,nan,nan,nan

@@ -2,9 +2,10 @@ import torch
 import torch_npu
 from torch_npu.contrib import transfer_to_npu
 import numpy as np
+import torch.nn as nn
 
-npy = np.load('/var/lib/kubelet/jw/projects/CroPA_jw/output/open_flamingo_shots_0/cropa/num_10_unknown/frac_0.05/run_1/900/262162_.npy')
-print(npy.shape)
+loss = nn.CrossEntropyLoss()
+print(loss)
 # inputs_embeds = torch.rand(1, 55, 4096,requires_grad=True)
 # # mask = torch.ones_like(inputs_embeds)
 # # context_token_len = 30

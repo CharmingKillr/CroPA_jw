@@ -1,8 +1,0 @@
-vqa, target num:0, total attack num:0,best loss: 7.500990867614746
-vqa_specific, target num:0, total attack num:0,best loss: 7.500990867614746
-cls, target num:0, total attack num:0,best loss: 7.500990867614746
-cap, target num:0, total attack num:0,best loss: 7.500990867614746
-vqa, target num:0, total attack num:0,best loss: 8.860771179199219
-vqa_specific, target num:0, total attack num:0,best loss: 8.860771179199219
-cls, target num:0, total attack num:0,best loss: 8.860771179199219
-cap, target num:0, total attack num:0,best loss: 8.860771179199219

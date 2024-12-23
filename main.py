@@ -188,7 +188,7 @@ def attack(
         
         perturb_list = []
         for i in input_ids_list:
-            perturb = torch.zeros_like(lm_emb(i),device="cpu",requires_grad=True)
+            perturb = torch.zeros_like(lm_emb(i),device="cpu",requires_grad=True)  # 1,47,4096
             perturb_list.append(perturb)
         
         access_order = list(range(prompt_num))
@@ -257,7 +257,11 @@ def attack(
                 )[0]
 
             # total_loss.append(float(loss.item()))
+            # if torch.isnan(loss.detach()).any():
+            #     print(f"NaN detected at ep {ep}, skipping update for this step.")
+            #     continue  # 跳过当前的迭代步骤
             loss.backward()
+
             loss_json[img_id].append(float(loss.item()))
             tpoch.set_postfix(loss=loss.item(),best_loss=best_loss.item(),ep = ep,t_id=t_ids)   # 实时在进度条右侧显示
             
@@ -299,8 +303,14 @@ def attack(
             
             if ep in save_perturb_iterations:
                 os.makedirs(f"{output_dir}/{ep}",exist_ok=True)
-                np.save(f"{output_dir}/{ep}/{ques_id_to_img_id[item['question_id']]}_.npy",best_attack.clone().cpu().numpy()) 
-                attack  = best_attack     
+                if best_attack is not None:
+                    np.save(f"{output_dir}/{ep}/{ques_id_to_img_id[item['question_id']]}_.npy",best_attack.clone().cpu().numpy()) 
+                    attack  = best_attack 
+                else:
+                    print("No best attack found.")
+                    attack = torch.randn([1,3,224,224], requires_grad=True,device = device)
+                    attack = torch.clamp(attack, min=-epsilon, max=epsilon)
+                    
                 vqa_sample = vqa_agnostic_instruction()  # 包含十个问题
                 vqa_specific_sample = vqa_specific_instruction[img_id]  # 根据每张图像有15个问题
                 prompt_list = [vqa_sample,vqa_specific_sample[:10],cls_instruction(),cap_instruction()] # cls_instruction是gpt生成的20条图像分类prompt  cap_instruction是关于20条图像字幕的prompt
